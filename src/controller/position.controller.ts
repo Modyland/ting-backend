@@ -1,5 +1,6 @@
 import { Controller, Get,Post,Body,Query} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { positionDTO } from 'src/dto/position.dto';
 import { positionService } from 'src/service/position.service';
 
 @Controller('position')
