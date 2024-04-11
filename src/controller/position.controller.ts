@@ -1,21 +1,16 @@
 import { Controller, Get,Post,Body,Query} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { positionService } from 'src/service/position.service';
-import { positionDTO } from '../dto/parents.dto';
-import { staticConfigValue } from 'src/config/staticConfigValue';
-//import { ConfigService } from '@nestjs/config';
 
 @Controller('position')
 @ApiTags('position')
 export class positionController {
-  constructor(private readonly positionService: positionService,
-    //private configService:ConfigService
+  constructor(private readonly positionService: positionService,    
     ) {}  
 
   @Post("/api_getdata")
  async postAll(    
-   @Body() body: positionDTO): Promise<string> {     
-    // return await this.positionService.postParent(body);
+   @Body() body: positionDTO): Promise<string> {         
     return ''
   }
   @Get("/getTest")
@@ -24,10 +19,7 @@ export class positionController {
   }
 
   @Get("/Test")
- async post(): Promise<string> {      
-  //let path = staticConfigValue.getFirebase_sdk(this.configService).path
-  //  console.log(path)        
-   // return path;   
+ async post(): Promise<string> {        
    return '';
   }
 }
