@@ -49,10 +49,19 @@ export class SmsService{
         message.push(newLine)
         message.push(timeStamp)
         message.push(newLine)
-        message.push(this.accessKey)   
+        message.push(this.accessKey)
+        // hmac.update(method)
+        // hmac.update(space)
+        // hmac.update(url)
+        // hmac.update(timeStamp)
+        // hmac.update(newLine)
+        // hmac.update(this.accessKey)        
+        //시그니처 생성        
+        const signature = hmac.update(message.join('')).digest('base64')      
+        // console.log(hmac)
+        //  const signature = hmac.digest('base64')      
 
-        const signature = hmac.update(message.join('')).digest('base64')     
-
+        //string 으로 반환        
         return signature.toString();
       }  
 
@@ -75,6 +84,7 @@ export class SmsService{
 
     smsCount = async (phoneNumber:string): Promise<number> => {
         try{
+            // .andWhere(`smsEntity.writetime like '%${timeDay}%'`)
             const timeDay = dayjs(new Date()).format('YYYY-MM-DD')            
             const result = await this.smsRepository.createQueryBuilder()
                             .select('COUNT(*) AS count')
@@ -90,15 +100,17 @@ export class SmsService{
         }
     }
 
-    sendSms = async (id:string,phoneNumber:string):Promise<any> => {
+    sendSms = async (id:string,phoneNumber:string):Promise<any> => {        
         const writetime = Date.now().toString()
 
         if (!await this.checkDayCount(phoneNumber)) return '인증번호 하루 횟수 초과 하셨습니다.';
 
         const signature = this.makeSignatureForSMS(writetime);
 
+        // 캐시에 있던 데이터 삭제
         await this.cacheManager.del(phoneNumber);
         
+        // 난수 생성 (6자리로 고정)
         const checkNumber = this.makeOTP().toString().padStart(6,'0')
 
         const sendNumber:string = this.config.get('COMPANYNUMBER')
@@ -133,8 +145,9 @@ export class SmsService{
                 body,                   
                 {headers},        
             ).then(async() => {
+                // 캐시 추가하기
+                await this.cacheManager.set(phoneNumber, checkNumber, 180000);                       
                 await this.insertSMS(id,phoneNumber)
-                await this.cacheManager.set(phoneNumber, checkNumber, 180000);
                 return true;
             }).catch(
                 (error) =>
@@ -142,8 +155,7 @@ export class SmsService{
                 console.log(HttpStatus.INTERNAL_SERVER_ERROR)
                 console.log(error)
                 return error
-                })                 
-
+                })            
             return result
         }catch(E){
             console.log(E)
@@ -151,6 +163,7 @@ export class SmsService{
         }
     }
 
+    //인증번호 발송 성공시 db 저장
     insertSMS = async (id:string,phoneNumber:string) => {
         try{
             const time = dayjs(new Date()).format('YYYY-MM-DDTHH:mm:ss')
@@ -164,6 +177,7 @@ export class SmsService{
         }
     }
 
+    // SMS 확인 로직, 문자인증은 3분 이내에 입력해야지 가능합니다!
    checkSMS = async(phoneNumber: string,inputNumber:number): Promise<boolean> => {
         try{
             const sentNumber = (await this.cacheManager.get(phoneNumber)) as number;
@@ -177,6 +191,7 @@ export class SmsService{
         }   
     }
 
+    // 무작위 6자리 랜덤 번호 생성하기
     makeOTP = ():number => {
         const randNum = Math.floor(Math.random() * 1000000);
         return randNum;
