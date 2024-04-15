@@ -103,7 +103,7 @@ export class SmsService{
     sendSms = async (id:string,phoneNumber:string):Promise<any> => {        
         const writetime = Date.now().toString()
 
-        if (!await this.checkDayCount(phoneNumber)) return '인증번호 하루 횟수 초과 하셨습니다.';
+        // if (!await this.checkDayCount(phoneNumber)) return '인증번호 하루 횟수 초과 하셨습니다.';
 
         const signature = this.makeSignatureForSMS(writetime);
 
