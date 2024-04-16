@@ -4,8 +4,6 @@ import { Repository } from 'typeorm';
 import { userDTO } from '../dto/user.dto';
 import { commonFun } from 'src/clsfunc/commonfunc';
 import { DelUserLogEntity, userEntity } from 'src/entity/user.entity';
-import { isDefined } from 'class-validator';
-import { commonQuery } from 'src/clsfunc/commonQuery';
 import { pwBcrypt } from 'src/clsfunc/pwAES';
 import { Login_logService } from './login_log.service';
 import { Login_logDTO } from 'src/dto/Login_log.dto';
