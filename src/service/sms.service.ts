@@ -14,6 +14,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {Repository,Like} from 'typeorm';
 import { smsEntity } from 'src/entity/sms.entity';
 import * as dayjs from 'dayjs';
+import { isUndefined } from 'util';
 
 
 @Injectable()
@@ -103,7 +104,7 @@ export class SmsService{
     sendSms = async (id:string,phoneNumber:string):Promise<any> => {        
         const writetime = Date.now().toString()
 
-        if (!await this.checkDayCount(phoneNumber)) return '인증번호 하루 횟수 초과 하셨습니다.';
+        // if (!await this.checkDayCount(phoneNumber)) return '인증번호 하루 횟수 초과 하셨습니다.';
 
         const signature = this.makeSignatureForSMS(writetime);
 
@@ -178,17 +179,15 @@ export class SmsService{
     }
 
     // SMS 확인 로직, 문자인증은 3분 이내에 입력해야지 가능합니다!
-   checkSMS = async(phoneNumber: string,inputNumber:number): Promise<boolean> => {
-        try{
-            const sentNumber = (await this.cacheManager.get(phoneNumber)) as number;
-            console.log('check sms code' +  typeof( inputNumber))
-            if (sentNumber == inputNumber) return true;
-            else return false;
-
-        }catch(E){
-            console.log(E)
-            return false;
-        }   
+   checkSMS = async(phoneNumber: string,inputNumber:number): Promise<any> => {
+    try{
+        const sentNumber = await this.cacheManager.get(phoneNumber);        
+        if (sentNumber != null) return Number(sentNumber) == inputNumber;
+        else return {msg: "3분이 지났습니다."}
+    }catch(E){
+        console.log(E)
+        return false;
+    }   
     }
 
     // 무작위 6자리 랜덤 번호 생성하기

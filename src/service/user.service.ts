@@ -5,6 +5,7 @@ import { userDTO } from '../dto/user.dto';
 import { commonFun } from 'src/clsfunc/commonfunc';
 import { DelUserLogEntity, userEntity } from 'src/entity/user.entity';
 import { isDefined } from 'class-validator';
+import { commonQuery } from 'src/clsfunc/commonQuery';
 import { pwBcrypt } from 'src/clsfunc/pwAES';
 import { Login_logService } from './login_log.service';
 import { Login_logDTO } from 'src/dto/Login_log.dto';
@@ -21,9 +22,9 @@ export class userService {
 
   async gubunKind(body:userDTO): Promise<string>{   
     switch(body.kind){
-        case "IDDupe" :
+        case "idDupe" :
             return await this.checkIDDupe(body.id);
-        case "Login" :
+        case "login" :
              return await this.Login(body);        
         case "signUp" :
             return await this.signUp(body);
@@ -35,6 +36,10 @@ export class userService {
              return await this.userDelete(body);
         case "updateLoginCheck" :
             return await this.updateLogin_out(body);
+        case "findID":
+            return await this.getID(body);
+        case "profile":
+            return await this.getProfile(body.id);
         case null  :
             return false.toString();
 
@@ -118,6 +123,20 @@ export class userService {
     }
   }
 
+  async getID(body:userDTO): Promise<string>{    
+    try{          
+        
+        const result:userEntity = await this.userRepository.createQueryBuilder()
+                                .select('id')
+                                .where({"id":body.id})
+                                .getRawOne()                                
+        return result.id;
+    }catch(E){
+        console.log(E)        
+    }  
+    
+  }
+
   async signUp(body:userDTO):Promise<string>{
     try{      
       return await this.setInsert(this.userRepository,userEntity,body).toString()
@@ -151,7 +170,7 @@ export class userService {
   async getProfile(id:string): Promise<string>{
     try{
        const result:userEntity = await this.userRepository.createQueryBuilder()
-                                  .select('id,phone,gender,profile,aka,access_token')
+                                  .select('id,phone,birth,gender,profile,aka,access_token')
                                   .where({"id":id})
                                   .getRawOne()
       return commonFun.converterJson(result)
@@ -206,7 +225,7 @@ export class userService {
    }    
   }
     
-  async updateLogin_out(body:userDTO):Promise<string>{
+    async updateLogin_out(body:userDTO):Promise<string>{
         try{
             const result = await this.userRepository.createQueryBuilder()
                                             .update(userEntity)        
@@ -260,7 +279,6 @@ export class userService {
             console.log('updatePWD : ' + E)
             return false.toString();
         }             
-    }
-    
+    }    
 }
 
