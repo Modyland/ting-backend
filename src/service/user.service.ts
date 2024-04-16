@@ -7,6 +7,7 @@ import { DelUserLogEntity, userEntity } from 'src/entity/user.entity';
 import { pwBcrypt } from 'src/clsfunc/pwAES';
 import { Login_logService } from './login_log.service';
 import { Login_logDTO } from 'src/dto/Login_log.dto';
+import { isDefined } from 'class-validator';
 
 
 @Injectable()
