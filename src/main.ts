@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './module/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,6 +17,9 @@ async function bootstrap() {
       }
     }),
   );
+
+  app.use(express.json({limit:'100mb'}))
+  app.use(express.urlencoded({limit:'100mb'}))
   
   const config = new DocumentBuilder()
   .setTitle('ting')
@@ -32,6 +36,6 @@ async function bootstrap() {
     credentials:true
   });  
   
-  await app.listen('9999');
+  await app.listen('4500');
 }
 bootstrap();

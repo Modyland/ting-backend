@@ -1,7 +1,7 @@
 import { IsNumber,IsOptional,IsString } from "class-validator";
 import { ApiProperty } from '@nestjs/swagger';
 
-export class appversionDTO{   
+export class AppversionDTO{   
     @IsString()
     @ApiProperty({type:String, description:''})
     readonly admin:string;

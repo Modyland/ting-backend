@@ -1,7 +1,6 @@
 import { Controller, Get,Post,Body,Query} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Login_logDTO } from 'src/dto/Login_log.dto';
-import { JwtAccessStrategy } from 'src/jwt/jwtAccessStrategy';
 import { Login_logService } from 'src/service/login_log.service';
 
 

@@ -4,7 +4,7 @@ import { SmsService } from 'src/service/sms.service';
 
 @Controller('SMS')
 @ApiTags('SMS')
-export class smsController {
+export class SmsController {
   constructor(
     private readonly smsService: SmsService,    
     ) {}  
@@ -16,17 +16,18 @@ export class smsController {
   }
   @Get("/sendSMS")
  async getSendSMS(
-    @Query('id') id:string,  
-    @Query('phone') phone: string
+    @Query('id') id:string = "",  
+    @Query('phone') phone: string,
+    @Query('check') check: boolean,
     ): Promise<boolean> {            
-    return await this.smsService.sendSms(id,phone);   
+    return await this.smsService.sendSms(id,phone,check);   
   }
 
   @Get("/checkSMS")
  async getCheckSMS(
     @Query('phone') phone: string,
     @Query('code') code: number
-    ): Promise<boolean> {            
+    ): Promise<any> {            
     return await this.smsService.checkSMS(phone,code);   
   }
 

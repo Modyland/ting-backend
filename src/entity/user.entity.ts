@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, Double, Int32} from 'typeorm';
 
 @Entity('user')
-export class userEntity{
+export class UserEntity{
 
     @PrimaryGeneratedColumn()
     idx: number;
@@ -9,7 +9,7 @@ export class userEntity{
     @Column({type:'varchar'})
     id:string;
 
-    @Column({type:'varchar'})
+    @Column({type:'varchar',unique:true})
     phone:string;
 
     @Column({type:'varchar'})
@@ -27,6 +27,9 @@ export class userEntity{
     @Column({type:'tinyint'})
     pause:string;
 
+    @Column({type:'datetime'})
+    imgupdate:string;
+
     @Column({type:'blob'})
     profile:Buffer;   
     
@@ -35,6 +38,9 @@ export class userEntity{
 
     @Column({type:'tinyint'})
     guard:Int32;
+
+    @Column({type:'varchar'})
+    activate:string;
 
     @Column({type:'varchar'})
     access_token:string;   
@@ -74,11 +80,17 @@ export class DelUserLogEntity{
     @Column({type:'tinyint'})
     pause:string;
 
+    @Column({type:'datetime'})
+    imgupdate:string;
+
     @Column({type:'varchar'})
     profile:string;  
 
     @Column({type:'varchar'})
     aka:string;
+
+    @Column({type:'varchar'})
+    activate:string; 
 
     @Column({type:'varchar'})
     access_token:string;   

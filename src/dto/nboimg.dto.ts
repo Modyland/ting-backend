@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsArray, IsNumber,IsOptional,IsString } from "class-validator";
 
 
-export class nboImgDTO{
+export class NboImgDTO{
 
     @IsString()
     @IsOptional()

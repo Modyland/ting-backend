@@ -1,19 +1,20 @@
 import { Module} from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { userController } from 'src/controller/user.controller';
-import { Login_logEntity } from 'src/entity/login_log.entity';
-import { DelUserLogEntity, userEntity } from 'src/entity/user.entity';
-import { Login_logService } from 'src/service/login_log.service';
-import { userService } from 'src/service/user.service';
-
+import { UserController } from 'src/controller/user.controller';
+import { DelUserLogEntity, UserEntity } from 'src/entity/user.entity';
+import { UserService } from 'src/service/user.service';
+import { Login_logModule } from './Login_log.module';
+import { PositionModule } from './position.module';
 
 
 @Module({
-    imports:[
-        TypeOrmModule.forFeature([userEntity,DelUserLogEntity,Login_logEntity])
+    imports:[        
+        TypeOrmModule.forFeature([UserEntity,DelUserLogEntity]), 
+        Login_logModule,
+        PositionModule
     ],
-    exports:[userService],
-    controllers:[userController],
-    providers:[userService,Login_logService]
+    exports:[UserService],
+    controllers:[UserController],
+    providers:[UserService]
 })
-export class userModule {}
+export class UserModule {}

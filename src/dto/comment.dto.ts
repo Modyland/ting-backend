@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNumber,IsOptional,IsString } from "class-validator";
 
-export class commentDTO{
+export class CommentDTO{
     @IsString()
     @IsOptional()
     @ApiProperty({type:String, description:'post 구분 값'})

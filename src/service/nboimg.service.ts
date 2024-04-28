@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { nboImgEntity } from "src/entity/profileLog.entity";
-import { nboImgDTO } from "src/dto/nboimg.dto";
+import { NboImgEntity } from "src/entity/profileLog.entity";
+import { NboImgDTO } from "src/dto/nboimg.dto";
 import { commonFun } from 'src/clsfunc/commonfunc';
 
 
 @Injectable()
 export class NboImgService {  
-  constructor(@InjectRepository(nboImgEntity) private nboImgRepository:Repository<nboImgEntity>,
+  constructor(@InjectRepository(NboImgEntity) private nboImgRepository:Repository<NboImgEntity>,
   ){}
 
-  async InsertImg (body:nboImgDTO): Promise<string>{
+  async InsertImg (body:NboImgDTO): Promise<string>{
     try{          
       await this.nboImgRepository.createQueryBuilder()
               .insert()
-              .into(nboImgEntity)
+              .into(NboImgEntity)
               .values([{
                   id:body.id,nboidx:body.nboidx,nboImg:body.nboImg,writetime:body.writetime
               }])
@@ -28,10 +28,10 @@ export class NboImgService {
     } 
   }
 
-  async updateLast(body:nboImgDTO): Promise<string>{    
+  async updateLast(body:NboImgDTO): Promise<string>{    
         try{        
             const result = await this.nboImgRepository.createQueryBuilder()
-            .update(nboImgEntity)        
+            .update(NboImgEntity)        
             .set({ "nboImg":body.nboImg,"writetime":body.writetime})
             .where({"id":body.id})
             .andWhere({"nboidx":body.nboidx})

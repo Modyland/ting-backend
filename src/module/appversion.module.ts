@@ -1,14 +1,14 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { appversionController } from "src/controller/appversion.controller";
-import { appversionEntity } from "src/entity/appversion.entity";
-import { appversionService } from "src/service/appversion.service";
+import { AppversionController } from "src/controller/appversion.controller";
+import { AppversionEntity } from "src/entity/appversion.entity";
+import { AppversionService } from "src/service/appversion.service";
 
 @Module({
     imports:[
-        TypeOrmModule.forFeature([appversionEntity])
+        TypeOrmModule.forFeature([AppversionEntity])
     ],
-    controllers:[appversionController],
-    providers:[appversionService]
+    controllers:[AppversionController],
+    providers:[AppversionService]
 })
-export class appversionModule {}
+export class AppversionModule {}

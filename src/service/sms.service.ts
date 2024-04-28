@@ -9,22 +9,21 @@ import * as crypto from 'crypto';
 import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosRequestConfig } from 'axios'
-import { userEntity } from 'src/entity/user.entity';
+import { UserService } from 'src/service/user.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import {Repository,Like} from 'typeorm';
-import { smsEntity } from 'src/entity/sms.entity';
+import { Repository,Like } from 'typeorm';
+import { SmsEntity } from 'src/entity/sms.entity';
 import * as dayjs from 'dayjs';
-import { isUndefined } from 'util';
 
 
 @Injectable()
 @UseInterceptors(CacheInterceptor)    
 export class SmsService{
     constructor(
-        @InjectRepository(smsEntity) private smsRepository:Repository<smsEntity>,
-        @InjectRepository(userEntity) private userRepository:Repository<userEntity>,        
+        @InjectRepository(SmsEntity) private smsRepository:Repository<SmsEntity>,        
         @Inject(CACHE_MANAGER) private cacheManager: Cache,
         private readonly config: ConfigService, // .env
+        private readonly userService:UserService
       ) {}
 
       accessKey = this.config.get('NAVER_ACCESSKEY')      
@@ -50,17 +49,9 @@ export class SmsService{
         message.push(newLine)
         message.push(timeStamp)
         message.push(newLine)
-        message.push(this.accessKey)
-        // hmac.update(method)
-        // hmac.update(space)
-        // hmac.update(url)
-        // hmac.update(timeStamp)
-        // hmac.update(newLine)
-        // hmac.update(this.accessKey)        
+        message.push(this.accessKey)      
         //시그니처 생성        
-        const signature = hmac.update(message.join('')).digest('base64')      
-        // console.log(hmac)
-        //  const signature = hmac.digest('base64')      
+        const signature = hmac.update(message.join('')).digest('base64')     
 
         //string 으로 반환        
         return signature.toString();
@@ -85,7 +76,6 @@ export class SmsService{
 
     smsCount = async (phoneNumber:string): Promise<number> => {
         try{
-            // .andWhere(`smsEntity.writetime like '%${timeDay}%'`)
             const timeDay = dayjs(new Date()).format('YYYY-MM-DD')            
             const result = await this.smsRepository.createQueryBuilder()
                             .select('COUNT(*) AS count')
@@ -101,10 +91,20 @@ export class SmsService{
         }
     }
 
-    sendSms = async (id:string,phoneNumber:string):Promise<any> => {        
+    sendSms = async (id:string,phoneNumber:string,check:boolean = true):Promise<any> => {  
+        
+        const checkUser = await this.userService.checkUserPhone(phoneNumber)
+        if(check) if(!checkUser) return {msg:0}
+
         const writetime = Date.now().toString()
 
-        // if (!await this.checkDayCount(phoneNumber)) return '인증번호 하루 횟수 초과 하셨습니다.';
+        if(check) if (!await this.checkDayCount(phoneNumber)) return {msg:1};
+
+        if(id) {
+            const resultID = await this.userService.getID(id)
+            if (resultID == null)
+                return {msg:2}
+        }
 
         const signature = this.makeSignatureForSMS(writetime);
 
@@ -160,7 +160,7 @@ export class SmsService{
             return result
         }catch(E){
             console.log(E)
-            return E
+            return {msg:E}
         }
     }
 
@@ -168,9 +168,9 @@ export class SmsService{
     insertSMS = async (id:string,phoneNumber:string) => {
         try{
             const time = dayjs(new Date()).format('YYYY-MM-DDTHH:mm:ss')
-            const result = this.smsRepository.createQueryBuilder()
+            const result = await this.smsRepository.createQueryBuilder()
                             .insert()
-                            .into(smsEntity)
+                            .into(SmsEntity)
                             .values([{id:id,phone:phoneNumber,writetime:time}])
                             .execute()
         }catch(E){
@@ -180,14 +180,14 @@ export class SmsService{
 
     // SMS 확인 로직, 문자인증은 3분 이내에 입력해야지 가능합니다!
    checkSMS = async(phoneNumber: string,inputNumber:number): Promise<any> => {
-    try{
-        const sentNumber = await this.cacheManager.get(phoneNumber);        
-        if (sentNumber != null) return Number(sentNumber) == inputNumber;
-        else return {msg: "3분이 지났습니다."}
-    }catch(E){
-        console.log(E)
-        return false;
-    }   
+        try{
+            const sentNumber = await this.cacheManager.get(phoneNumber);        
+            if (sentNumber != null) return Number(sentNumber) == inputNumber ? true : {msg:0};
+            else return {msg: 1}
+        }catch(E){
+            console.log(E)
+            return {msg: E};
+        }   
     }
 
     // 무작위 6자리 랜덤 번호 생성하기

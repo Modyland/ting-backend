@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, Double, Int32 } from 'typeorm';
 
 @Entity('sms')
-export class smsEntity{
+export class SmsEntity{
 
     @PrimaryGeneratedColumn()
     idx: number;

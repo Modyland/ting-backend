@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, Double, Int32 } from 'typeorm';
 
 @Entity('app_version')
-export class appversionEntity{
+export class AppversionEntity{
 
     @PrimaryGeneratedColumn()
     idx: number;

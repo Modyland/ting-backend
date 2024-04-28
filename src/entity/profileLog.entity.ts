@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, Double, Int32 } from 'typeorm';
 
 @Entity('nbo_img')
-export class nboImgEntity{
+export class NboImgEntity{
 
     @PrimaryGeneratedColumn()
     idx: number;

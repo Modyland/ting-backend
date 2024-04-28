@@ -4,7 +4,7 @@ import * as redisStore from 'cache-manager-redis-store'
 import { ConfigService } from "@nestjs/config";
 
 @Injectable()
-export class CachConfigService implements CacheOptionsFactory {
+export class SmsCachConfigService implements CacheOptionsFactory {
     constructor(private configService:ConfigService){}
     
     createCacheOptions(): CacheModuleOptions {        
@@ -16,8 +16,7 @@ export class CachConfigService implements CacheOptionsFactory {
             max: 1000,            
             password:this.configService.get<string>('PASSWORD'),
             db:this.configService.get<Number>('REDISDB')
-        };
-        console.log(config.store)
+        };        
         return config;
     }
     

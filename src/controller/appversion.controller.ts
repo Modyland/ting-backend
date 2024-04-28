@@ -1,16 +1,16 @@
 import { Controller, Get,Post,Body,Query} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { appversionDTO } from 'src/dto/appversion.dto';
-import { appversionService } from 'src/service/appversion.service';
+import { AppversionDTO } from 'src/dto/appversion.dto';
+import { AppversionService } from 'src/service/appversion.service';
 
 @Controller('appversion')
 @ApiTags('appversion')
-export class appversionController {
-  constructor(private readonly appversionService: appversionService) {}  
+export class AppversionController {
+  constructor(private readonly appversionService: AppversionService) {}  
 
   @Post("/api_getdata")
  async api_getdata(    
-   @Body() body: appversionDTO): Promise<string> {        
+   @Body() body: AppversionDTO): Promise<string> {        
     return await this.appversionService.updateVersion(body);
   }
 

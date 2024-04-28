@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { commonFun } from 'src/clsfunc/commonfunc';
-import { appversionDTO } from 'src/dto/appversion.dto';
-import { appversionEntity } from 'src/entity/appversion.entity';
+import { AppversionDTO } from 'src/dto/appversion.dto';
+import { AppversionEntity } from 'src/entity/appversion.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
-export class appversionService {  
-  constructor(@InjectRepository(appversionEntity) private appversionRepository:Repository<appversionEntity>
+export class AppversionService {  
+  constructor(@InjectRepository(AppversionEntity) private appversionRepository:Repository<AppversionEntity>
   ){}
   
   async getVersion(admin:string): Promise<string>{
@@ -22,10 +22,10 @@ export class appversionService {
     }
   }
 
-  async updateVersion(body:appversionDTO): Promise<string>{    
+  async updateVersion(body:AppversionDTO): Promise<string>{    
     try{           
         const result = await this.appversionRepository.createQueryBuilder()
-        .update(appversionEntity)        
+        .update(AppversionEntity)        
         .set({
           "appversion":body.appversion
         })

@@ -1,18 +1,20 @@
 import { Module} from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { nboController } from 'src/controller/nbo.controller';
-import { nboEntity } from 'src/entity/nbo.entity';
-import { nboImgEntity } from 'src/entity/profileLog.entity';
-import { nboService } from 'src/service/nbo.service';
+import { CommentEntity } from 'src/entity/comment.entity';
+import { NboEntity } from 'src/entity/nbo.entity';
+import { NboImgEntity } from 'src/entity/profileLog.entity';
+import { CommentService } from 'src/service/comment.service';
+import { NboService } from 'src/service/nbo.service';
 import { NboImgService } from 'src/service/nboimg.service';
 
 
 
 @Module({
     imports:[
-        TypeOrmModule.forFeature([nboEntity,nboImgEntity])
+        TypeOrmModule.forFeature([NboEntity,NboImgEntity,CommentEntity])
     ],
     controllers:[nboController],
-    providers:[nboService,NboImgService]
+    providers:[NboService,NboImgService,CommentService]
 })
-export class nboModule {}
+export class NboModule {}

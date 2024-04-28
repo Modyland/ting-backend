@@ -1,11 +1,11 @@
 import { Controller, Get,Post,Body,Query} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { commentService } from 'src/service/comment.service';
+import { CommentService } from 'src/service/comment.service';
 
 @Controller('comment')
 @ApiTags('comment')
-export class commentController {
-  constructor(private readonly commentService: commentService) {}  
+export class CommentController {
+  constructor(private readonly commentService: CommentService) {}  
 
 //   @Post("/api_getdata")
 //  async postAll(    

@@ -1,54 +1,69 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectRepository} from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { userDTO } from '../dto/user.dto';
+import { UserDTO } from '../dto/user.dto';
 import { commonFun } from 'src/clsfunc/commonfunc';
-import { DelUserLogEntity, userEntity } from 'src/entity/user.entity';
+import { DelUserLogEntity, UserEntity } from 'src/entity/user.entity';
+import { isDefined } from 'class-validator';
 import { pwBcrypt } from 'src/clsfunc/pwAES';
 import { Login_logService } from './login_log.service';
 import { Login_logDTO } from 'src/dto/Login_log.dto';
-import { isDefined } from 'class-validator';
-
+import { ConfigService } from '@nestjs/config';
+import { commonQuery } from 'src/clsfunc/commonQuery';
+import { Response } from 'express';
+import { Readable } from 'stream'
+import { PositionDTO } from 'src/dto/position.dto';
+import { PositionService } from './position.service';
 
 @Injectable()
-export class userService {  
+export class UserService {  
   constructor(
-  @InjectRepository(userEntity) private userRepository:Repository<userEntity>,    
-  @InjectRepository(DelUserLogEntity) private DeleteUserLogRepository:Repository<DelUserLogEntity>,  
-  private login_logService:Login_logService
+  @InjectRepository(UserEntity) private userRepository:Repository<UserEntity>,    
+  @InjectRepository(DelUserLogEntity) private DeleteUserLogRepository:Repository<DelUserLogEntity>,    
+  private positionService:PositionService,
+  private login_logService:Login_logService,
+  private config:ConfigService,
   ){}
-  
 
-  async gubunKind(body:userDTO): Promise<string>{   
+  activate = this.config.get<string>('USER_ACTIVITY_LOGIN')
+
+  async gubunKind(body:UserDTO): Promise<any>{   
     switch(body.kind){
         case "idDupe" :
             return await this.checkIDDupe(body.id);
         case "login" :
-             return await this.Login(body);        
+             return await this.Login(body);
+        case "logout" :
+            //to do
+             const guard = this.config.get<number>('USER_GUARD_LOGOUT') 
+             const logBody:Login_logDTO = {id:body.id,writetime:body.writetime,activity:body.activate}
+             await this.login_logService.LogInsert(logBody)
+             return await commonQuery.UpdateGuard(this.userRepository,body.id,body.activate,guard)?.toString();
         case "signUp" :
             return await this.signUp(body);
         case "profileUpdate" :
             return await this.profileUpdate(body)
         case "updatePWD" :
+            //to do
             return await this.updatePWD(body);        
         case "deleteUser" :
-             return await this.userDelete(body);
-        case "updateLoginCheck" :
-            return await this.updateLogin_out(body);
+            //to do
+             return await this.userDelete(body);        
         case "findID":
-            return await this.getID(body);
+            //to do
+            return await this.getFindID(body);
         case "profile":
-            return await this.getProfile(body.id);
+            return await this.getProfile(body.id);        
         case null  :
-            return false.toString();
+            return false?.toString();
 
     } 
     
   }  
 
-  async findByFields(id:string,phone:string):Promise<userEntity>{
+  async findByFields(id:string,phone:string):Promise<UserEntity>{
     try{
-      const result:userEntity = await this.userRepository.createQueryBuilder()
+      const result:UserEntity = await this.userRepository.createQueryBuilder()
                       .select("*")
                       .where({"id":id})
                       .andWhere({"phone":phone})
@@ -59,7 +74,7 @@ export class userService {
     }
   }
 
-  async userDelete(body:userDTO):Promise<string>{
+  async userDelete(body:UserDTO):Promise<string>{
     try{
         var info = await this.getUserDelete_Info(body.id)
         if(!info){
@@ -68,12 +83,12 @@ export class userService {
           {         
               return await this.setDelete(body.id)            
           }else{
-              return false.toString();
+              return false?.toString();
           }
         }
     }catch(E){
         console.log(E)
-        return false.toString();
+        return false?.toString();
     }
   }  
 
@@ -83,16 +98,16 @@ export class userService {
                                     .delete()                                    
                                     .where({"id":id})
                                     .execute()
-            return true.toString();
+            return true?.toString();
         }catch(E){
             console.log(E)
-            return false.toString();
+            return false?.toString();
         }
   }
 
   async getUserDelete_Info(id:string):Promise<any>{
     try{
-        const result:userEntity = await this.userRepository.createQueryBuilder()
+        const result:UserEntity = await this.userRepository.createQueryBuilder()
                       .select('*')                                    
                       .where({"id":id})
                       .getRawOne()
@@ -103,31 +118,34 @@ export class userService {
     }
   }
 
-  async profileUpdate(body:userDTO): Promise<string>{
+  async profileUpdate(body:UserDTO): Promise<string>{
     try{        
         var boolResult = false
+        const profile = commonFun.getImageBuffer(body.profile)
         const result = await this.userRepository.createQueryBuilder()
-                        .update(userEntity)        
+                        .update(UserEntity)        
                         .set({
-                            "profile":body.profile
+                            imgupdate:body.imgupdate,
+                            profile:profile
                         })
                         .where({"id":body.id})
                         .execute()
-        boolResult = true
+        await this.positionService.UserPositionUpdateRenewDate(body.id,body.imgupdate)
+        boolResult = true        
         console.log('setProfile')
-        return boolResult.toString();
+        return boolResult?.toString();
     }catch(E){
         console.log('profileUpdate' + E)
-        return false.toString();
+        return false?.toString();
     }
   }
 
-  async getID(body:userDTO): Promise<string>{    
+  async getFindID(body:UserDTO): Promise<string>{    
     try{          
         
-        const result:userEntity = await this.userRepository.createQueryBuilder()
+        const result:UserEntity = await this.userRepository.createQueryBuilder()
                                 .select('id')
-                                .where({"id":body.id})
+                                .where({"phone":body.phone})
                                 .getRawOne()                                
         return result.id;
     }catch(E){
@@ -136,56 +154,104 @@ export class userService {
     
   }
 
-  async signUp(body:userDTO):Promise<string>{
-    try{      
-      return await this.setInsert(this.userRepository,userEntity,body).toString()
+  async getID(id:string): Promise<string>{    
+    try{          
+        
+        const result:UserEntity = await this.userRepository.createQueryBuilder()
+                                .select('id')
+                                .where({"id":id})
+                                .getRawOne()                                
+        return result.id;
+    }catch(E){
+        console.log(E)        
+    }  
+    
+  }
+
+  async signUp(body:UserDTO):Promise<string>{
+    try{     
+      const result = await this.setInsert(this.userRepository,UserEntity,body)
+      const positionBody:PositionDTO = {kind:"",useridx:result,id:body.id,writetime:null,renewtime:null,latitude:0,longitude:0,address:null}
+      await this.positionService.InsertUserPosition(positionBody)      
+      return result?.toString()
     }catch(E){
       console.log('signUp' + E)
-      return false.toString();      
+      return false?.toString();      
     }
   }
 
-  async setInsert(repository:any,entity:any,body:userDTO):Promise<boolean>{
+  async setInsert(repository:Repository<any>,entity:any,body:UserDTO,primary:boolean = false):Promise<any>{
     try{        
-        const AESpwd = await pwBcrypt.transformPassword(body.pwd)
+        const AESpwd = await pwBcrypt.transformPassword(body.pwd)        
+        const profile = commonFun.getImageBuffer(body.profile)
         const result = await repository.createQueryBuilder()
                             .insert()
                             .into(entity)
                             .values([{
-                                id:body.id,phone:body.phone,password:AESpwd,
+                                id:body.id,phone:body.phone,pwd:AESpwd,
                                 birth:body.birth,gender:body.gender,signupdate:body.signupdate,
-                                pause:body.pause,profile:body.profile,aka:body.aka,guard:0,
+                                pause:body.pause,profile:profile,aka:body.aka,guard:0,activate:body.activate,
                                 access_token:body.access_token,refresh_token:body.refresh_token,alarm_token:body.alarm_token
                             }])
                             .execute()
+          
         console.log('setInsert user')        
-        return true
+        return primary ? result.identifiers[0].idx : true
     }catch(E){
         console.log('setInsert : ' + E)
         return false
     }    
   } 
 
-  async getProfile(id:string): Promise<string>{
+  async sendProfiles(res: Response,id:string):Promise<any>{
+    try{      
+      const result:UserEntity[] = await this.userRepository.createQueryBuilder('user')
+                                  .select('id,profile')
+                                  // .where("user.id != :id",{"id":id})                                  
+                                  // .andWhere({"activate":this.activate})                                  
+                                  .where({"activate":this.activate})
+                                  .getRawMany()            
+      if(result.length != 0){        
+        result.map(d => {                                                                      
+        const readableStream = new Readable({
+          read() {
+              this.push(d.profile);              
+              this.push(null);
+            }
+          })
+          readableStream.pipe(res);          
+        })
+      }
+      else
+        res.send({msg:0})      
+
+    }catch(E){
+      res.send({msg:E})
+    }
+  }
+
+  async getProfile(id:string): Promise<any>{
     try{
-       const result:userEntity = await this.userRepository.createQueryBuilder()
-                                  .select('id,phone,birth,gender,profile,aka,access_token')
+       const result:UserEntity = await this.userRepository.createQueryBuilder()
+                                  .select('id,phone,birth,gender,profile,aka')
                                   .where({"id":id})
                                   .getRawOne()
-      return commonFun.converterJson(result)
+       const profile = commonFun.getImageBase64(result.profile)                           
+       const length = result.profile?.length
+       const user = {id:id,phone:result.phone,birth:result.birth,gender:result.gender,profile:length == 0 ? null : profile,aka:result.aka}         
+      return commonFun.converterJson(user)
     }catch(E){
       console.log("getProfile" + E)
-      return false.toString();
+      return false?.toString();
     }   
       
   } 
 
-  async CheckLogin(body:userDTO): Promise<boolean>{
+  async CheckLogin(body:UserDTO): Promise<boolean>{
       try{
-          const result:userEntity = await this.userRepository.createQueryBuilder('')
+          const result:UserEntity = await this.userRepository.createQueryBuilder('')
                                     .select('pwd')
                                     .where({"id":body.id})
-                                    .andWhere({"guard":0})
                                     .getRawOne()
           var bool = await pwBcrypt.validatePwd(body.pwd,result.pwd); 
           console.log('CheckLogin')                  
@@ -195,56 +261,59 @@ export class userService {
       }
   }
 
-  async Login(body:userDTO) : Promise<string>{
+  async Login(body:UserDTO) : Promise<any>{
     try{
       var bool = false
-      var checkLogin = await this.CheckLogin(body)
-      if (checkLogin){
-        bool = await this.UpdateLogin(body.id);
-        var logModel:Login_logDTO = {id:body.id,writetime:body.writetime,activity:"로그인"}
-        await this.login_logService.LogInsert(logModel);
+      var profile = null
+      const guard = this.config.get<number>('USER_GUARD_LOGIN')
+      
+      if(body.guard == 0){
+        var checkLogin = await this.CheckLogin(body)
+        if (checkLogin){
+          
+          bool = await commonQuery.UpdateGuard(this.userRepository,body.id,this.activate,guard);          
+        }
+      }else if (body.guard == 1) {
+        bool = await this.Login_sec(body,guard)
       }
-      return bool.toString();
+
+      if(bool){
+        var logModel:Login_logDTO = {id:body.id,writetime:body.writetime,activity:this.activate}
+        await this.login_logService.LogInsert(logModel);
+        profile = await this.getProfile(body.id)
+      }
+
+      return bool? {profile:profile} : {msg:0};      
     }catch(E){
       console.log('Login : ' + E)
+      return {msg:E};
     }
   }
 
-  async UpdateLogin(id:string): Promise<boolean>{
-   try{
-        await this.userRepository.createQueryBuilder()
-        .update(userEntity)
-        .set({guard:1})
-        .where({"id":id})
-        .execute()        
-        return true;
-   }catch(E){
-        console.log('UpdateLogin : ' + E)
-        return false;
-   }    
-  }
-    
-    async updateLogin_out(body:userDTO):Promise<string>{
-        try{
-            const result = await this.userRepository.createQueryBuilder()
-                                            .update(userEntity)        
-                                            .set({ "guard":body.guard})
-                                            .where({"id":body.id})
-                                            .execute()                                            
-            return true.toString();
-        }catch(E){
-            console.log(E)
-            return false.toString();
-        }
-    }
-  
-  async checkIDDupe(id:string): Promise<string>{
+  async Login_sec(body:UserDTO,guard:number):Promise<boolean>{
     try{
-      var boolResult = false
+      const result = await this.userRepository.createQueryBuilder()
+                      .select('id')
+                      .where({"id":body.id})
+                      .andWhere({"guard":guard})
+                      .getRawOne()
+      if(result){
+        return true;
+      }else{
+        return false;
+      }
+    }catch(E){
+      return false;
+    }
+  }
+  
+  async checkIDDupe(id:string): Promise<any>{
+    try{
+      var boolResult = false;
       if(isDefined(id)){
-          const result: userEntity[] = await this.userRepository.createQueryBuilder('user')
-                                                  .select('eq')    
-                                                  .where({"eq":id})    
+          const result: UserEntity[] = await this.userRepository.createQueryBuilder('user')
+                                                  .select('id')    
+                                                  .where({"id":id})    
                                                   .getRawMany()
           if(result.length == 0){        
               const rs = await this.DeleteUserLogRepository.createQueryBuilder()
@@ -252,32 +321,50 @@ export class userService {
                           .where({"id":id})
                           .getRawMany()
               if(rs.length == 0)
-                  boolResult = true        
+                  boolResult = true
           }  
       }    
-      console.log('checkIDDupe')
-      return boolResult.toString();
+      console.log('checkIDDupe')      
+      return boolResult ? boolResult : {msg:0};
     }catch(E){
       console.log('checkIDDupe : ' + E)
+      return {msg:E} 
     }
    }
 
-    async updatePWD(body:userDTO): Promise<string>{
+    async updatePWD(body:UserDTO): Promise<string>{
       try{        
             var boolResult = false
             const AESpwd = await pwBcrypt.transformPassword(body.pwd)
             const result = await this.userRepository.createQueryBuilder()
-                                        .update(userEntity)        
+                                        .update(UserEntity)        
                                         .set({ "pwd":AESpwd})
                                         .where({"id":body.id})
                                         .execute()
             boolResult = true            
             console.log('updatePWD')
-            return boolResult.toString();
+            return boolResult?.toString();
         }catch(E){
             console.log('updatePWD : ' + E)
-            return false.toString();
+            return false?.toString();
         }             
-    }    
+    }
+    
+    async checkUserPhone(phone:string): Promise<boolean> {
+      try{        
+        var boolResult = false
+        const result = await this.userRepository.createQueryBuilder()
+                                    .select('phone')
+                                    .where({"phone":phone})
+                                    .getRawMany()
+        if (result.length == 0)
+            boolResult = true            
+        console.log('phone check')
+        return boolResult;
+    }catch(E){
+        console.log('updatePWD : ' + E)
+        return false;
+    }  
+    }
 }
 

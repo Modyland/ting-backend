@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsNumber,IsOptional,IsString } from "class-validator";
 import { Double,Int32 } from "typeorm";
 
-export class nboDTO{
+export class NboDTO{
     @IsString()
     @IsOptional()
     @ApiProperty({type:String, description:''})

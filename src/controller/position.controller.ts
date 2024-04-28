@@ -1,26 +1,19 @@
 import { Controller, Get,Post,Body,Query} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { positionDTO } from 'src/dto/position.dto';
-import { positionService } from 'src/service/position.service';
+import { PositionService } from 'src/service/position.service';
+import { PositionDTO } from '../dto/position.dto';
+
 
 @Controller('position')
 @ApiTags('position')
-export class positionController {
-  constructor(private readonly positionService: positionService,    
+export class PositionController {
+  constructor(private readonly positionService: PositionService,    
     ) {}  
 
   @Post("/api_getdata")
- async postAll(    
-   @Body() body: positionDTO): Promise<string> {         
-    return ''
+ async InsertPosition(    
+   @Body() body: PositionDTO): Promise<any> {     
+    return await this.positionService.InsertPosition(body);    
   }
-  @Get("/getTest")
- async getAll(@Query('eq') eq: string[]): Promise<boolean> {            
-    return true;   
-  }
-
-  @Get("/Test")
- async post(): Promise<string> {        
-   return '';
-  }
+  
 }

@@ -1,8 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNumber,IsOptional,IsString,IsArray } from "class-validator";
+import { IsNumber,IsOptional,IsString,IsArray} from "class-validator";
 import { Double,Int32 } from "typeorm";
 
-export class userDTO{
+export class UserDTO{
     
     @IsOptional()
     @IsString()
@@ -49,9 +49,14 @@ export class userDTO{
     readonly pause:number;
 
     @IsOptional()
+    @IsString()
+    @ApiProperty({type:String, description:''})
+    readonly imgupdate:string;
+
+    @IsOptional()
     @IsArray()
-    @ApiProperty({type:Buffer, description:''})
-    readonly profile:Buffer;
+    @ApiProperty({type:Number, description:''})
+    readonly profile:number[];
 
     @IsOptional()
     @IsString()
@@ -60,8 +65,13 @@ export class userDTO{
 
     @IsOptional()
     @IsNumber()
-    @ApiProperty({type:String, description:''})
-    readonly guard:string;
+    @ApiProperty({type:Number, description:''})
+    readonly guard:number;
+
+    @IsOptional()
+    @IsString()
+    @ApiProperty({type:String, description:'활동'})
+    activate:string;
 
     @IsOptional()
     @IsString()
