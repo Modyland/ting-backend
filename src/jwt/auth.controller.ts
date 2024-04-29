@@ -1,6 +1,6 @@
 import { Controller, Get,Post,Body,Query, Res, Req, HttpCode, UseGuards,Request, HttpStatus} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { userDTO } from 'src/dto/user.dto';
+import { UserDTO } from 'src/dto/user.dto';
 import { AuthService } from 'src/jwt/auth.service';
 import { AuthGuard } from './authGuard';
 
@@ -12,7 +12,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post("/sign-in")
  async signIn(    
-   @Body() body: userDTO,
+   @Body() body: UserDTO,
    @Req() req:Request,
    @Res({passthrough:true}) res:Response): Promise<any> {        
     const jwt = await this.authService.validateUser(body);    

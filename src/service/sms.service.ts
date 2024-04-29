@@ -94,7 +94,13 @@ export class SmsService{
     sendSms = async (id:string,phoneNumber:string,check:boolean = true):Promise<any> => {  
         
         const checkUser = await this.userService.checkUserPhone(phoneNumber)
-        if(check) if(!checkUser) return {msg:0}
+        if(check){
+            if(!checkUser) 
+                return {msg:0}
+            else
+                return {msg:2} //가입 안된 핸드폰번호
+
+        } 
 
         const writetime = Date.now().toString()
 

@@ -43,14 +43,12 @@ export class UserService {
             return await this.signUp(body);
         case "profileUpdate" :
             return await this.profileUpdate(body)
-        case "updatePWD" :
-            //to do
+        case "updatePWD" :            
             return await this.updatePWD(body);        
         case "deleteUser" :
             //to do
              return await this.userDelete(body);        
-        case "findID":
-            //to do
+        case "findID":            
             return await this.getFindID(body);
         case "profile":
             return await this.getProfile(body.id);        
@@ -92,7 +90,7 @@ export class UserService {
     }
   }  
 
-  async setDelete(id:string):Promise<string>{
+  async setDelete(id:string):Promise<any>{
         try{
             const result = await this.userRepository.createQueryBuilder()
                                     .delete()                                    
@@ -101,7 +99,7 @@ export class UserService {
             return true?.toString();
         }catch(E){
             console.log(E)
-            return false?.toString();
+            return {msg:E};
         }
   }
 
@@ -114,11 +112,11 @@ export class UserService {
         return result;
     }catch(E){
         console.log(E)
-        return false;
+        return {msg:E};
     }
   }
 
-  async profileUpdate(body:UserDTO): Promise<string>{
+  async profileUpdate(body:UserDTO): Promise<any>{
     try{        
         var boolResult = false
         const profile = commonFun.getImageBuffer(body.profile)
@@ -136,20 +134,22 @@ export class UserService {
         return boolResult?.toString();
     }catch(E){
         console.log('profileUpdate' + E)
-        return false?.toString();
+        return {msg:E};
     }
   }
 
-  async getFindID(body:UserDTO): Promise<string>{    
+  async getFindID(body:UserDTO): Promise<any>{    
     try{          
         
         const result:UserEntity = await this.userRepository.createQueryBuilder()
-                                .select('id')
+                                .select('id,signupdate')
                                 .where({"phone":body.phone})
-                                .getRawOne()                                
-        return result.id;
+                                .getRawOne()
+        console.log('getFindID')                              
+        return {id:result.id,signupdate:result.signupdate};
     }catch(E){
-        console.log(E)        
+        console.log(E)
+        return {msg:E}  
     }  
     
   }
@@ -168,7 +168,7 @@ export class UserService {
     
   }
 
-  async signUp(body:UserDTO):Promise<string>{
+  async signUp(body:UserDTO):Promise<any>{
     try{     
       const result = await this.setInsert(this.userRepository,UserEntity,body)
       const positionBody:PositionDTO = {kind:"",useridx:result,id:body.id,writetime:null,renewtime:null,latitude:0,longitude:0,address:null}
@@ -176,7 +176,7 @@ export class UserService {
       return result?.toString()
     }catch(E){
       console.log('signUp' + E)
-      return false?.toString();      
+      return {msg:E};
     }
   }
 

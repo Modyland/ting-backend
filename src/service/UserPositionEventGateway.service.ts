@@ -20,10 +20,10 @@ export class UserPositionEventGateway implements OnGatewayConnection,OnGatewayDi
   ){}
 
   private positionManager = new PositionManager();
-  
+
   @WebSocketServer() server:Server;
 
-  handleConnection(client: Socket, ...args: any[]) {
+  handleConnection(client: Socket, ...args: any[]) {    
     console.log('connect success',client.id)    
   }
 
@@ -32,9 +32,22 @@ export class UserPositionEventGateway implements OnGatewayConnection,OnGatewayDi
   }
 
   @SubscribeMessage('requestUserPositionData')
-  handleUserPositionDataRequest(client: Socket, payload:any){
-
+  handleUserPositionDataRequest(client: Socket, payload:any){    
+    console.log('on')
     client.emit('test','test')
+  }
+
+  @SubscribeMessage('requestTest')
+  handleRequestTest(client: Socket, payload:any){    
+    console.log('on')   
+
+    //필요한 정보 보내기
+
+    client.emit('test','request')
+
+    //서버로 정보 보내기
+
+    console.log('off')
   }
 
 }

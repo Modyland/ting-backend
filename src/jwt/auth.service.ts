@@ -2,8 +2,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { userService } from 'src/service/user.service';
-import { userDTO } from 'src/dto/user.dto';
+import { UserService } from 'src/service/user.service';
+import { UserDTO } from 'src/dto/user.dto';
 import { pwBcrypt } from 'src/clsfunc/pwAES';
 import { Payload } from 'src/interface/payload';
 import { ConfigService } from '@nestjs/config';
@@ -12,11 +12,11 @@ import { ConfigService } from '@nestjs/config';
 export class AuthService {
   constructor(
     private jwtService:JwtService,
-    private userSerivce:userService,
+    private userSerivce:UserService,
     private configService:ConfigService
     ){}
  
-    async validateUser(body:userDTO):Promise<{accessToken:string} | undefined>{
+    async validateUser(body:UserDTO):Promise<{accessToken:string} | undefined>{
       try{
         let userFind = await this.userSerivce.findByFields(body.id,body.phone)
         const validatePassword = pwBcrypt.validatePwd(body.pwd,userFind.pwd)

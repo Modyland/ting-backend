@@ -9,6 +9,7 @@ export class UserDTO{
     @ApiProperty({type:String, description:'post 구분 값'})
     readonly kind: string;
     
+    @IsOptional()
     @IsString()
     @ApiProperty({type:String, description:''})
     readonly id:string;
