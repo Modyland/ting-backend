@@ -3,11 +3,7 @@ import { Transform, Type } from "class-transformer";
 import { IsArray, IsNumber,IsOptional,IsString } from "class-validator";
 import { Double,Int32 } from "typeorm";
 
-export class PositionDTO{    
-
-    @IsString()
-    @ApiProperty({type:String, description:''})
-    readonly kind:string;
+export class PositionDTO{  
 
     @IsNumber()
     @IsOptional()
@@ -21,12 +17,12 @@ export class PositionDTO{
     @IsString()
     @IsOptional()
     @ApiProperty({type:String, description:''})
-    readonly writetime:string;   
+    readonly writetime?:string;
 
     @IsString()
     @IsOptional()
     @ApiProperty({type:String, description:''})
-    readonly renewtime:string;   
+    readonly imgupdate?:string; 
 
     @IsNumber()
     @IsOptional()
@@ -41,5 +37,10 @@ export class PositionDTO{
     @IsString()
     @IsOptional()
     @ApiProperty({type:String, description:''})
-    readonly address:string;
+    readonly address?:string;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({type:String, description:''})
+    readonly aka:string;
 }

@@ -4,16 +4,10 @@ import { ConfigService } from '@nestjs/config';
 export class staticConfigValue{  
    static getFirebase_sdk = (configService:ConfigService) => { 
                 
-        return {
-           path: configService.get<string>('FIREBASESDKPATH')
+      return {
+         projectId: configService.get<string>('PRIVATE_ID'),         
+         clientEmail:configService.get<string>('CLIENT_EMAIL'),
+         privateKey: configService.get<string>('PRIVATE_KEY').replace(/\\n/g,'\n')
         }
     }
-
-    static getFirebase_sdk_ios = (configService:ConfigService) => { 
-                
-      return {
-         path: configService.get<string>('FIREBASESKDIOSPATH')
-      }
-  }
-
 }

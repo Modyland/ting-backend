@@ -7,13 +7,14 @@ import { PositionDTO } from '../dto/position.dto';
 @Controller('position')
 @ApiTags('position')
 export class PositionController {
-  constructor(private readonly positionService: PositionService,    
+  constructor(
+    // private readonly positionService: PositionService,    
     ) {}  
 
   @Post("/api_getdata")
  async InsertPosition(    
    @Body() body: PositionDTO): Promise<any> {     
-    return await this.positionService.InsertPosition(body);    
+    // return await this.positionService.InsertPosition(body);    
   }
   
 }

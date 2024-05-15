@@ -1,8 +1,9 @@
 
 export interface Position {
-  userId: string;
+  clientId: string;
   aka: string;
   userIdx: number;
+  userId: string;
   position: {
     latitude: number;
     longitude: number;

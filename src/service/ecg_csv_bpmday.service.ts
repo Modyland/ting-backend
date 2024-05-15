@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository,MoreThan,LessThan,MoreThanOrEqual } from 'typeorm';
 import { ecg_csv_bpmdayEntity } from 'src/entity/ecg_csv_bpmday.entity';
 import { commonFun } from 'src/clsfunc/commonfunc';
-import { commonQuery } from 'src/clsfunc/commonQuery';
 
 @Injectable()
 export class ecg_csv_bpmdayService {

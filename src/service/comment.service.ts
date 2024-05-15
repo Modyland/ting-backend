@@ -2,12 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CommentEntity } from 'src/entity/comment.entity';
-import { commonFun } from 'src/clsfunc/commonfunc';
-import { MoreThan,LessThan,Between } from 'typeorm';
-import { commonQuery } from 'src/clsfunc/commonQuery';
-import { firebasenoti } from 'src/alarm/firebasenoti';
-import { ConfigService } from '@nestjs/config';
-
 
 @Injectable()
 export class CommentService {  

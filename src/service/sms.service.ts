@@ -92,15 +92,16 @@ export class SmsService{
     }
 
     sendSms = async (id:string,phoneNumber:string,check:boolean = true):Promise<any> => {  
-        
+        // 회원가입 때 check = true, 아이디 및 비번 찾기때 check = false
         const checkUser = await this.userService.checkUserPhone(phoneNumber)
+        console.log(checkUser,check)
         if(check){
             if(!checkUser) 
                 return {msg:0}
-            else
+        }else{
+            if(checkUser)                 
                 return {msg:2} //가입 안된 핸드폰번호
-
-        } 
+        }
 
         const writetime = Date.now().toString()
 

@@ -5,10 +5,10 @@ import { UserModule } from "src/module/user.module";
 import { PositionModule } from 'src/module/position.module';
 import { NboModule } from 'src/module/nbo.module';
 import { CommentModule } from 'src/module/comment.module';
-// import { nboImgModule } from 'src/module/nboImg.module';
 import { SmsModule } from 'src/module/sms.module';
 import { Login_logModule } from 'src/module/Login_log.module';
 import { AppversionModule } from 'src/module/appversion.module';
+import { AlarmModule } from 'src/module/alarm.module';
 
 
 
@@ -27,14 +27,14 @@ export class allModule{
         UserModule,
         PositionModule,
         NboModule,
-        CommentModule,
-        // nboImgModule,        
+        CommentModule,    
         SmsModule,
         Login_logModule,
         AppversionModule,
+        AlarmModule
         //  ecg_csv_bpmdayModule,
-        // ecg_csv_ecgdataModule,admin_login_logModule,
-        // parentsModule,ecg_byteModule,app_logModule,app_bleModule
+        // admin_login_logModule,
+        // parentsModule,app_logModule,app_bleModule
         
     ]
 }

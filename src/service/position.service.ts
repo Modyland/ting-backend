@@ -7,27 +7,17 @@ import { PositionDTO } from 'src/dto/position.dto';
 @Injectable()
 export class PositionService {  
   constructor(
-    @InjectRepository(PositionEntity) private parentsRepository:Repository<PositionEntity>,
-    @InjectRepository(UserPositionEntity) private userParentsRepository:Repository<UserPositionEntity>,
-    ){}
-
-  async funcKind(body:PositionDTO): Promise<any>{
-    switch(body.kind){
-      case"insert":
-        return await this.InsertPosition(body)
-      default:
-        return false
-    }
-  }
-  
+    @InjectRepository(PositionEntity) private positionRepository:Repository<PositionEntity>,
+    @InjectRepository(UserPositionEntity) private userPositionRepository:Repository<UserPositionEntity>,
+    ){}  
 
   async InsertPosition(body:PositionDTO): Promise<any>{    
     try{      
         let boolResult = false                
-        const result = await this.parentsRepository.createQueryBuilder()
+        const result = await this.positionRepository.createQueryBuilder()
                         .insert()
                         .into(PositionEntity)
-                        .values([{id:body.id,writetime:body.writetime,latitude:body.latitude,longitude:body.longitude,address:body.address}])
+                        .values([{id:body.id,latitude:body.latitude,longitude:body.longitude}])
                         .execute()
         await this.UserPositionUpdate(body)
         if(body.address != null){
@@ -45,10 +35,10 @@ export class PositionService {
   async InsertUserPosition(body:PositionDTO): Promise<boolean>{    
     try{      
         let boolResult = false                
-        const result = await this.userParentsRepository.createQueryBuilder()
+        const result = await this.userPositionRepository.createQueryBuilder()
                         .insert()
                         .into(UserPositionEntity)
-                        .values([{useridx:body.useridx,id:body.id,writetime:body.writetime,latitude:body.latitude,longitude:body.longitude,address:body.address}])
+                        .values([{useridx:body.useridx,id:body.id,imgupdate:body.imgupdate,latitude:body.latitude,longitude:body.longitude,address:body.address,aka:body.aka}])
                         .execute()                        
         console.log(`position insert`) 
         boolResult = true                   
@@ -62,7 +52,7 @@ export class PositionService {
 
   async UserPositionUpdate(body:PositionDTO):Promise<boolean>{
     try{      
-      const result = await this.parentsRepository.createQueryBuilder()
+      const result = await this.userPositionRepository.createQueryBuilder()
                           .update(UserPositionEntity)
                           .set({writetime:body.writetime,latitude:body.latitude,longitude:body.longitude})
                           .where({"id":body.id})
@@ -76,7 +66,7 @@ export class PositionService {
 
   async UserPositionUpdateAddress(id:string,address:string):Promise<boolean>{
     try{      
-      const result = await this.parentsRepository.createQueryBuilder()
+      const result = await this.userPositionRepository.createQueryBuilder()
                           .update(UserPositionEntity)
                           .set({address:address})
                           .where({"id":id})
@@ -90,7 +80,7 @@ export class PositionService {
 
   async UserPositionUpdateRenewDate(id:string,renewtime:string):Promise<boolean>{
     try{      
-      const result = await this.parentsRepository.createQueryBuilder()
+      const result = await this.userPositionRepository.createQueryBuilder()
                           .update(UserPositionEntity)
                           .set({renewtime:renewtime})
                           .where({"id":id})
@@ -102,15 +92,22 @@ export class PositionService {
     } 
   }
   
-  async GetUserPosition(id:string,latitude:number,longitude:number):Promise<string>{
-    await this.userParentsRepository.createQueryBuilder()
-    .select('latitude,longitude')
-    return ""
+  async GetUserPosition(id:string):Promise<any>{
+    try{
+    const result:UserPositionEntity[] = await this.userPositionRepository.createQueryBuilder('position')
+                    .select('useridx,aka,latitude,longitude')
+                    .where("position.id != :id",{"id":id})
+                    .getRawMany()
+    return result
+    }catch(E){
+      console.log(E)
+      return false;
+    } 
   }
 
   async UserPositionSubQuery():Promise<string>{
     try{
-      const query = await this.userParentsRepository.createQueryBuilder()
+      const query = await this.userPositionRepository.createQueryBuilder()
                     .subQuery()
                     .select('')
                     .from(UserPositionEntity,'')

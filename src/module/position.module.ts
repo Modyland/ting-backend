@@ -10,7 +10,7 @@ import { UserPositionEventGateway } from 'src/service/UserPositionEventGateway.s
         TypeOrmModule.forFeature([PositionEntity,UserPositionEntity])
     ],
     exports:[PositionService],
-    controllers:[PositionController],
+    controllers:[],
     providers:[PositionService,UserPositionEventGateway]
 })
 export class PositionModule {}

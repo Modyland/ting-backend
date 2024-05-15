@@ -30,7 +30,7 @@ export class UserEntity{
     @Column({type:'datetime'})
     imgupdate:string;
 
-    @Column({type:'blob'})
+    @Column({type:'mediumblob'})
     profile:Buffer;   
     
     @Column({type:'varchar'})

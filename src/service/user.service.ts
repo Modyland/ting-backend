@@ -50,6 +50,8 @@ export class UserService {
              return await this.userDelete(body);        
         case "findID":            
             return await this.getFindID(body);
+        case "updateToken":
+            return await this.updateToken(body);
         case "profile":
             return await this.getProfile(body.id);        
         case null  :
@@ -120,6 +122,7 @@ export class UserService {
     try{        
         var boolResult = false
         const profile = commonFun.getImageBuffer(body.profile)
+        console.log(body.imgupdate)
         const result = await this.userRepository.createQueryBuilder()
                         .update(UserEntity)        
                         .set({
@@ -170,8 +173,9 @@ export class UserService {
 
   async signUp(body:UserDTO):Promise<any>{
     try{     
-      const result = await this.setInsert(this.userRepository,UserEntity,body)
-      const positionBody:PositionDTO = {kind:"",useridx:result,id:body.id,writetime:null,renewtime:null,latitude:0,longitude:0,address:null}
+      const result = await this.setInsert(this.userRepository,UserEntity,body,true)
+      const positionBody:PositionDTO = {useridx:result,id:body.id,imgupdate:body.imgupdate,latitude:0,longitude:0,address:null,aka:body.aka}
+      console.log(positionBody)
       await this.positionService.InsertUserPosition(positionBody)      
       return result?.toString()
     }catch(E){
@@ -195,7 +199,8 @@ export class UserService {
                             }])
                             .execute()
           
-        console.log('setInsert user')        
+        console.log('setInsert user')  
+        console.log(result.identifiers)      
         return primary ? result.identifiers[0].idx : true
     }catch(E){
         console.log('setInsert : ' + E)
@@ -206,11 +211,13 @@ export class UserService {
   async sendProfiles(res: Response,id:string):Promise<any>{
     try{      
       const result:UserEntity[] = await this.userRepository.createQueryBuilder('user')
-                                  .select('id,profile')
+                                  .select('profile')
+                                  .where({"id":id})
                                   // .where("user.id != :id",{"id":id})                                  
-                                  // .andWhere({"activate":this.activate})                                  
-                                  .where({"activate":this.activate})
-                                  .getRawMany()            
+                                  // .andWhere({"activate":this.activate}) 
+                                  // .where({"activate":this.activate})
+                                  .getRawMany()    
+      console.log(result)        
       if(result.length != 0){        
         result.map(d => {                                                                      
         const readableStream = new Readable({
@@ -233,12 +240,12 @@ export class UserService {
   async getProfile(id:string): Promise<any>{
     try{
        const result:UserEntity = await this.userRepository.createQueryBuilder()
-                                  .select('id,phone,birth,gender,profile,aka')
+                                  .select('idx,id,phone,birth,gender,profile,aka')
                                   .where({"id":id})
                                   .getRawOne()
        const profile = commonFun.getImageBase64(result.profile)                           
        const length = result.profile?.length
-       const user = {id:id,phone:result.phone,birth:result.birth,gender:result.gender,profile:length == 0 ? null : profile,aka:result.aka}         
+       const user = {idx:result.idx,id:id,phone:result.phone,birth:result.birth,gender:result.gender,profile:length == 0 ? null : profile,aka:result.aka}         
       return commonFun.converterJson(user)
     }catch(E){
       console.log("getProfile" + E)
@@ -346,6 +353,23 @@ export class UserService {
             return boolResult?.toString();
         }catch(E){
             console.log('updatePWD : ' + E)
+            return false?.toString();
+        }             
+    }
+
+    async updateToken(body:UserDTO): Promise<string>{
+      try{        
+            var boolResult = false            
+            const result = await this.userRepository.createQueryBuilder()
+                                        .update(UserEntity)        
+                                        .set({ "alarm_token":body.alarm_token})
+                                        .where({"id":body.id})
+                                        .execute()
+            boolResult = true            
+            console.log('updateToken')
+            return boolResult?.toString();
+        }catch(E){
+            console.log('updateToken : ' + E)
             return false?.toString();
         }             
     }
