@@ -1,11 +1,11 @@
-
 export interface Position {
   clientId: string;
   aka: string;
   userIdx: number;
-  userId: string;
-  position: {
-    latitude: number;
-    longitude: number;
-  };
+  position: rect;
+}
+
+export interface rect {
+  lat: number;
+  lng: number;
 }
