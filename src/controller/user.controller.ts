@@ -3,13 +3,17 @@ import { ApiTags } from '@nestjs/swagger';
 import { UserDTO } from '../dto/user.dto';
 import { UserService } from 'src/service/user.service';
 import { Response } from 'express';
-import { PositionManager } from 'src/manager/position.manager';
-import { rect } from 'src/interface/Position';
+import { commonFun } from 'src/clsfunc/commonfunc';
+import { ConfigService } from '@nestjs/config';
+
 
 @Controller('ting')
 @ApiTags('ting')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private config:ConfigService
+    ) {}
 
   @Post('/api_getdata')
   async postAll(@Body() body: UserDTO): Promise<any> {
@@ -22,14 +26,10 @@ export class UserController {
   }
 
   @Get('/test')
-  test() {
-    var test = new PositionManager();
-    var points: rect[] = [
-      { lat: 38.040838495349185, lng: 128.71375654039565 },
-      { lat: 38.040838495349185, lng: 128.73285168853545 },
-      { lat: 38.01437860481994, lng: 128.73285168853545 },
-      { lat: 38.01437860481994, lng: 128.71375654039565 },
-    ];
-    return test.checkIsPointInRectangle({ lat: 38.025, lng: 128.72 }, points);
+  async test() {    
+    const path = this.config.get<string>('DEFAULT_PROFILE_IMAGE_PATH')
+    const profile = await commonFun.getDefault_ImageAsBase64(path)
+    return profile
   }
+  
 }

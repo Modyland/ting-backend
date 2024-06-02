@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserDTO } from '../dto/user.dto';
@@ -14,9 +14,12 @@ import { Response } from 'express';
 import { Readable } from 'stream';
 import { PositionDTO } from 'src/dto/position.dto';
 import { PositionService } from './position.service';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { NboService } from './nbo.service';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
@@ -25,6 +28,8 @@ export class UserService {
     private positionService: PositionService,
     private login_logService: Login_logService,
     private config: ConfigService,
+    private readonly schedulerRegistry: SchedulerRegistry,
+    private nboService: NboService,
   ) {}
 
   activate = this.config.get<string>('USER_ACTIVITY_LOGIN');
@@ -37,16 +42,7 @@ export class UserService {
         return await this.Login(body);
       case 'logout':
         //to do
-        const guard = this.config.get<number>('USER_GUARD_LOGOUT');
-        const logBody: Login_logDTO = {
-          id: body.id,
-          writetime: body.writetime,
-          activity: body.activate,
-        };
-        await this.login_logService.LogInsert(logBody);
-        return await commonQuery
-          .UpdateGuard(this.userRepository, body.id, body.activate, guard)
-          ?.toString();
+        return await this.scheduleLogout(body);
       case 'signUp':
         return await this.signUp(body);
       case 'profileUpdate':
@@ -62,8 +58,54 @@ export class UserService {
         return await this.updateToken(body);
       case 'profile':
         return await this.getProfile(body.id);
+      case 'visibleUpdate':
+        return await this.updateVisible(body);
       case null:
-        return false?.toString();
+        return { msg: null };
+    }
+  }
+
+  async getQueryRunner() {
+    const queryRunner =
+      this.userRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    return queryRunner;
+  }
+
+  async scheduleLogout(body: UserDTO) {
+    try {
+      const timeoutDuration = 10 * 60 * 1000;
+      const timeout = setTimeout(async () => {
+        try {
+          const guard = this.config.get<number>('USER_GUARD_LOGOUT');
+          const logBody: Login_logDTO = {
+            id: body.id,
+            writetime: body.writetime,
+            activity: body.activate,
+          };
+          await this.login_logService.LogInsert(logBody);
+
+          this.logger.debug(
+            `user logout activity update ${body.id} :: ${body.activate}`,
+          );
+
+          return await commonQuery.UpdateGuard(
+            this.userRepository,
+            body.id,
+            body.activate,
+            guard,
+          );
+        } catch (E) {
+          this.logger.error(`user logout error ${body.id}: ${E.message}`);
+        }
+      }, timeoutDuration); // 10분 후 실행
+
+      this.schedulerRegistry.addTimeout(`${body.id}_logout`, timeout);
+      return true;
+    } catch (E) {
+      console.log(E);
+      return { msg: E };
     }
   }
 
@@ -81,7 +123,7 @@ export class UserService {
     }
   }
 
-  async userDelete(body: UserDTO): Promise<string> {
+  async userDelete(body: UserDTO) {
     try {
       var info = await this.getUserDelete_Info(body.id);
       if (!info) {
@@ -90,15 +132,21 @@ export class UserService {
           DelUserLogEntity,
           body,
         );
-        if (bool) {
+
+        let nboLogInsertBool;
+        for (const i of body.nboIdx) {
+          nboLogInsertBool = await this.nboService.DeleteNbo(i);
+        }
+
+        if (bool && nboLogInsertBool == true) {
           return await this.setDelete(body.id);
         } else {
-          return false?.toString();
+          return { msg: 0 };
         }
       }
     } catch (E) {
       console.log(E);
-      return false?.toString();
+      return { msg: E };
     }
   }
 
@@ -132,7 +180,6 @@ export class UserService {
 
   async profileUpdate(body: UserDTO): Promise<any> {
     try {
-      var boolResult = false;
       const profile = commonFun.getImageBuffer(body.profile);
       console.log(body.imgupdate);
       const result = await this.userRepository
@@ -148,9 +195,8 @@ export class UserService {
         body.id,
         body.imgupdate,
       );
-      boolResult = true;
       console.log('setProfile');
-      return boolResult?.toString();
+      return result.affected > 0;
     } catch (E) {
       console.log('profileUpdate' + E);
       return { msg: E };
@@ -203,10 +249,27 @@ export class UserService {
         aka: body.aka,
       };
       console.log(positionBody);
-      await this.positionService.InsertUserPosition(positionBody);
-      return result?.toString();
+      const userPositionResult =
+        await this.positionService.InsertUserPosition(positionBody);
+      return userPositionResult;
     } catch (E) {
       console.log('signUp' + E);
+      return { msg: E };
+    }
+  }
+
+  async updateVisible(body: UserDTO) {
+    try {
+      const result = await this.userRepository
+        .createQueryBuilder()
+        .update(UserEntity)
+        .set({ visible: body.visible })
+        .where({ id: body.id })
+        .execute();
+      console.log('updateVisible : ', result.affected > 0);
+      return result.affected > 0;
+    } catch (E) {
+      console.log(E);
       return { msg: E };
     }
   }
@@ -219,7 +282,12 @@ export class UserService {
   ): Promise<any> {
     try {
       const AESpwd = await pwBcrypt.transformPassword(body.pwd);
-      const profile = commonFun.getImageBuffer(body.profile);
+      let profile: Buffer;
+      if (body.profile) {
+        profile = commonFun.getImageBuffer(body.profile);
+      } else {
+        profile = null;
+      }
       const result = await repository
         .createQueryBuilder()
         .insert()
@@ -240,6 +308,7 @@ export class UserService {
             access_token: body.access_token,
             refresh_token: body.refresh_token,
             alarm_token: body.alarm_token,
+            visible: body.visible,
           },
         ])
         .execute();
@@ -253,35 +322,17 @@ export class UserService {
     }
   }
 
-  async sendProfiles(res: Response, id: string): Promise<any> {
-    try {
-      const result: UserEntity[] = await this.userRepository
-        .createQueryBuilder('user')
-        .select('profile')
-        .where({ id: id })
-        // .where("user.id != :id",{"id":id})
-        // .where({"activate":this.activate})
-        .getRawMany();
-      console.log(result);
-      if (result.length != 0) {
-        result.map((d) => {
-          this.ResponseProfile(res, d.profile);
-        });
-      } else res.send({ msg: 0 });
-    } catch (E) {
-      res.send({ msg: E });
-    }
-  }
-
   async sendProfile(res: Response, idx: number): Promise<any> {
     try {
+      const visible = this.config.get<number>('USER_VISIBLE_SHOW');
       const result: UserEntity = await this.userRepository
         .createQueryBuilder()
         .select('profile')
         .where({ id: 'test' })
         // .where({"idx":idx})
+        // .andWhere({ activate: this.activate })
+        .andWhere({ visible: visible })
         .getRawOne();
-      // .andWhere({"activate":this.activate})
       if (result) {
         this.ResponseProfile(res, result.profile);
       } else res.send({ msg: 0 });
@@ -304,24 +355,32 @@ export class UserService {
     try {
       const result: UserEntity = await this.userRepository
         .createQueryBuilder()
-        .select('idx,id,phone,birth,gender,profile,aka')
+        .select('idx,id,phone,birth,gender,profile,aka,visible')
         .where({ id: id })
         .getRawOne();
-      const profile = commonFun.getImageBase64(result.profile);
-      const length = result.profile?.length;
+
+      let profile: string;
+      if (result.profile) {
+        profile = commonFun.getImageBase64(result.profile);
+      } else {
+        const path = this.config.get<string>('DEFAULT_PROFILE_IMAGE_PATH');
+        profile = await commonFun.getDefault_ImageAsBase64(path);
+      }
+
       const user = {
         idx: result.idx,
         id: id,
         phone: result.phone,
         birth: result.birth,
         gender: result.gender,
-        profile: length == 0 ? null : profile,
+        profile: profile,
         aka: result.aka,
+        visible: result.visible,
       };
       return commonFun.converterJson(user);
     } catch (E) {
       console.log('getProfile' + E);
-      return false?.toString();
+      return false;
     }
   }
 
@@ -420,9 +479,8 @@ export class UserService {
     }
   }
 
-  async updatePWD(body: UserDTO): Promise<string> {
+  async updatePWD(body: UserDTO) {
     try {
-      var boolResult = false;
       const AESpwd = await pwBcrypt.transformPassword(body.pwd);
       const result = await this.userRepository
         .createQueryBuilder()
@@ -430,30 +488,27 @@ export class UserService {
         .set({ pwd: AESpwd })
         .where({ id: body.id })
         .execute();
-      boolResult = true;
       console.log('updatePWD');
-      return boolResult?.toString();
+      return result.affected > 0;
     } catch (E) {
       console.log('updatePWD : ' + E);
-      return false?.toString();
+      return { msg: E };
     }
   }
 
-  async updateToken(body: UserDTO): Promise<string> {
+  async updateToken(body: UserDTO) {
     try {
-      var boolResult = false;
       const result = await this.userRepository
         .createQueryBuilder()
         .update(UserEntity)
         .set({ alarm_token: body.alarm_token })
         .where({ id: body.id })
         .execute();
-      boolResult = true;
       console.log('updateToken');
-      return boolResult?.toString();
+      return result.affected > 0;
     } catch (E) {
       console.log('updateToken : ' + E);
-      return false?.toString();
+      return { msg: E };
     }
   }
 

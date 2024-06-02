@@ -49,6 +49,9 @@ export class UserEntity {
 
   @Column({ type: 'varchar' })
   alarm_token: string;
+
+  @Column({ type: 'tinyint' })
+  visible: number;
 }
 
 @Entity('del_user_log')
@@ -80,8 +83,8 @@ export class DelUserLogEntity {
   @Column({ type: 'datetime' })
   imgupdate: string;
 
-  @Column({ type: 'varchar' })
-  profile: string;
+  @Column({ type: 'mediumblob' })
+  profile: Buffer;
 
   @Column({ type: 'varchar' })
   aka: string;
@@ -97,4 +100,7 @@ export class DelUserLogEntity {
 
   @Column({ type: 'varchar' })
   alarm_token: string;
+
+  @Column({ type: 'tinyint' })
+  visible: number;
 }
