@@ -64,7 +64,7 @@ export class ClassesService {
       background_img: background_img,
       profile_img: profile_img,
       writetime: body.writetime,
-      name: body.name,
+      title: body.title,
       content: body.content,
     };
 

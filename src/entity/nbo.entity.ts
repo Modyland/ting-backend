@@ -11,6 +11,12 @@ export class NboEntity {
   @Column({ type: 'datetime' })
   writetime: string;
 
+  @Column({ type: 'int' })
+  useridx: number;
+
+  @Column({ type: 'datetime' })
+  imgupdate: string;
+
   @Column({ type: 'varchar' })
   aka: string;
 
@@ -29,8 +35,17 @@ export class NboEntity {
   @Column({ type: 'text' })
   content: string;
 
-  @Column({ type: 'longblob' })
-  Img: Buffer;
+  @Column({ type: 'tinyint' })
+  isImg: number;
+
+  @Column({ type: 'smallint' })
+  commentes: number;
+
+  @Column({ type: 'int' })
+  views: number;
+
+  @Column({ type: 'tinyint' })
+  pause: number;
 }
 
 @Entity('nbo_log')
@@ -44,6 +59,12 @@ export class NboLogEntity {
   @Column({ type: 'datetime' })
   writetime: string;
 
+  @Column({ type: 'int' })
+  useridx: number;
+
+  @Column({ type: 'int' })
+  nboidx: number;
+
   @Column({ type: 'varchar' })
   aka: string;
 
@@ -62,6 +83,12 @@ export class NboLogEntity {
   @Column({ type: 'text' })
   content: string;
 
-  @Column({ type: 'longblob' })
-  Img: Buffer;
+  @Column({ type: 'tinyint' })
+  isImg: number;
+
+  @Column({ type: 'smallint' })
+  commentes: number;
+
+  @Column({ type: 'int' })
+  views: number;
 }

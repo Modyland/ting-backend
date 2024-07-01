@@ -11,21 +11,36 @@ export class CommentEntity {
   @Column({ type: 'datetime' })
   writetime: string;
 
+  @Column({ type: 'datetime' })
+  imgupdate: string;
+
   @Column({ type: 'int' })
-  postNum: Int32;
+  useridx: number;
+
+  @Column({ type: 'int' })
+  postNum: number;
 
   @Column({ type: 'varchar' })
   aka: string;
 
   @Column({ type: 'int' })
-  likes: Int32;
+  likes: number;
 
   @Column({ type: 'varchar' })
-  content: string;
+  content: string;  
+
+  @Column({ type: 'tinyint' })
+  isImg: number;
+
+  @Column({ type: 'smallint' })
+  commentes: number;
+
+  @Column({ type: 'tinyint' })
+  pause: number;
 }
 
-@Entity('nbo_comment_log')
-export class CommentLogEntity {
+@Entity('nbocmt_cmt')
+export class Cmt_cmtEntity {
   @PrimaryGeneratedColumn()
   idx: number;
 
@@ -35,15 +50,30 @@ export class CommentLogEntity {
   @Column({ type: 'datetime' })
   writetime: string;
 
+  @Column({ type: 'datetime' })
+  imgupdate: string;
+
   @Column({ type: 'int' })
-  postNum: Int32;
+  useridx: number;
+
+  @Column({ type: 'int' })
+  commentNum: number;
+
+  @Column({ type: 'int' })
+  nboNum: number;  
 
   @Column({ type: 'varchar' })
   aka: string;
 
   @Column({ type: 'int' })
-  likes: Int32;
+  likes: number;
 
   @Column({ type: 'varchar' })
-  content: string;
+  content: string; 
+
+  @Column({ type: 'tinyint' })
+  isImg: number;
+  
+  @Column({ type: 'tinyint' })
+  pause: number;
 }
